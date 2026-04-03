@@ -12,6 +12,8 @@ A web application for scheduling group music lessons. The teacher posts availabl
 - Confirmation and reminder emails with calendar (.ics) attachments
 - Mobile-friendly client-facing booking pages
 
+![Lessons page](docs/sample-lessons-page-with-test-data.png)
+
 ## Running locally
 
 ### Prerequisites
