@@ -35,6 +35,18 @@ Edit `.env` and fill in your email (SMTP) credentials and a secret key. See `.en
 venv/bin/python run.py
 ```
 
+To start with sample lessons pre-loaded for testing:
+
+```bash
+venv/bin/python run.py --seed-initial-test-data
+```
+
+This creates 5 lessons at 2/9/16/23/30 days out, covering empty, below-threshold, at-threshold, full, and above-threshold states. No emails are sent. Re-running the flag clears and recreates the sample data. You can also run the seed script on its own without starting the server:
+
+```bash
+venv/bin/python seed_dev_data.py
+```
+
 The app runs at [http://127.0.0.1:5001](http://127.0.0.1:5001).
 
 - **Client booking page:** http://127.0.0.1:5001/
@@ -74,7 +86,8 @@ music_scheduler/
 │   ├── templates/           # Jinja2 HTML templates
 │   └── static/              # CSS and JS
 ├── instance/                # SQLite database (created automatically, not committed)
-├── run.py                   # Entry point
+├── run.py                   # Entry point (supports --seed-initial-test-data flag)
+├── seed_dev_data.py         # Standalone seed script for local testing
 ├── requirements.txt
 ├── .env.example
 └── .gitignore
