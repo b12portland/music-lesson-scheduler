@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Teacher Dashboard — Music Lessons{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+  <h1>Dashboard</h1>
+  <a href="{{ url_for('teacher.new_slot') }}" class="btn btn--primary">+ New lesson</a>
+</div>
+
+<section>
+  <h2>Upcoming lessons</h2>
+  {% if upcoming %}
+    <table class="slot-table">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Date & time</th>
+          <th>Status</th>
+          <th>Signups</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for slot in upcoming %}
+          <tr>
+            <td><a href="{{ url_for('teacher.slot_detail', slot_id=slot.id) }}">{{ slot.title }}</a></td>
+            <td>{{ slot.scheduled_at.strftime('%b %-d, %Y at %-I:%M %p') }}</td>
+            <td><span class="slot-status slot-status--{{ slot.status }}">{{ slot.status|capitalize }}</span></td>
+            <td>{{ slot.active_booking_count() }} / {{ slot.max_capacity }}</td>
+            <td>
+              <a href="{{ url_for('teacher.slot_detail', slot_id=slot.id) }}" class="btn btn--small">View</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="empty-state">No upcoming lessons. <a href="{{ url_for('teacher.new_slot') }}">Create one.</a></p>
+  {% endif %}
+</section>
+
+<section>
+  <h2>Past &amp; closed lessons</h2>
+  {% if past %}
+    <table class="slot-table slot-table--muted">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Date & time</th>
+          <th>Status</th>
+          <th>Signups</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for slot in past %}
+          <tr>
+            <td><a href="{{ url_for('teacher.slot_detail', slot_id=slot.id) }}">{{ slot.title }}</a></td>
+            <td>{{ slot.scheduled_at.strftime('%b %-d, %Y at %-I:%M %p') }}</td>
+            <td><span class="slot-status slot-status--{{ slot.status }}">{{ slot.status|capitalize }}</span></td>
+            <td>{{ slot.active_booking_count() }} / {{ slot.max_capacity }}</td>
+            <td>
+              <a href="{{ url_for('teacher.slot_detail', slot_id=slot.id) }}" class="btn btn--small">View</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="empty-state">No past lessons yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

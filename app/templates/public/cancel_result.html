@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Cancellation — Music Lessons{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  {% if result == "success" %}
+    <h1>Signup cancelled</h1>
+    <p>Your signup for <strong>{{ booking.slot.title }}</strong> has been cancelled.</p>
+    <a href="{{ url_for('public.index') }}" class="btn btn--primary">View other lessons</a>
+
+  {% elif result == "already_cancelled" %}
+    <h1>Already cancelled</h1>
+    <p>This signup for <strong>{{ booking.slot.title }}</strong> has already been cancelled.</p>
+    <a href="{{ url_for('public.index') }}" class="btn btn--primary">View lessons</a>
+
+  {% elif result == "deadline_passed" %}
+    <h1>Cancellation deadline has passed</h1>
+    <p>The cancellation window for <strong>{{ booking.slot.title }}</strong> has closed.
+    If you need to withdraw, please contact us directly.</p>
+    <a href="{{ url_for('public.index') }}" class="btn btn--primary">View lessons</a>
+  {% endif %}
+</div>
+{% endblock %}

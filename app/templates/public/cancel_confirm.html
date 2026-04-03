@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Cancel signup — Music Lessons{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <h1>Cancel your signup</h1>
+  <div class="confirmation-details">
+    <p><strong>{{ slot.title }}</strong></p>
+    <p>{{ slot.scheduled_at.strftime('%A, %B %-d at %-I:%M %p') }}</p>
+    <p>Student: {{ booking.student_name }}</p>
+  </div>
+  <p>Are you sure you want to cancel this signup?</p>
+  <form method="POST" action="{{ url_for('public.confirm_cancellation', token=booking.cancel_token) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <button type="submit" class="btn btn--danger">Yes, cancel my signup</button>
+    <a href="{{ url_for('public.index') }}" class="btn btn--secondary">No, go back</a>
+  </form>
+</div>
+{% endblock %}

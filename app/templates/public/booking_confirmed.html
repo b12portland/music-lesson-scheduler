@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}You're signed up! — Music Lessons{% endblock %}
+
+{% block content %}
+<div class="confirmation-page">
+  <div class="confirmation-icon">✓</div>
+  <h1>You're signed up!</h1>
+
+  <div class="confirmation-details">
+    <p><strong>{{ slot.title }}</strong></p>
+    <p>{{ slot.scheduled_at.strftime('%A, %B %-d at %-I:%M %p') }}</p>
+    <p>{{ slot.location }}</p>
+    <p>Student: {{ booking.student_name }}</p>
+  </div>
+
+  {% if slot.status == "confirmed" %}
+    <p class="status-note status-note--confirmed">This lesson is confirmed — you're in!</p>
+  {% else %}
+    <p class="status-note status-note--pending">
+      This lesson will be confirmed once {{ slot.min_threshold }} students have signed up
+      ({{ slot.active_booking_count() }} so far). We'll email you when it's confirmed.
+    </p>
+  {% endif %}
+
+  <p>A confirmation email with a calendar invite has been sent to <strong>{{ booking.email }}</strong>.</p>
+
+  <div class="cancel-section">
+    <h2>Need to cancel?</h2>
+    <p>Use this link to withdraw your signup. It will remain valid until the cancellation deadline
+    ({{ slot.deadline(settings).strftime('%A, %B %-d') }}) or 24 hours after you signed up,
+    whichever is later.</p>
+    <a href="{{ cancel_url }}" class="btn btn--secondary">Cancel my signup</a>
+    <p class="cancel-link-note">Save this page or your confirmation email — this is the only way to cancel.</p>
+  </div>
+</div>
+{% endblock %}

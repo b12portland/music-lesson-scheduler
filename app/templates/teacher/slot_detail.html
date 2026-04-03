@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}{{ slot.title }} — Teacher View{% endblock %}
+
+{% block content %}
+<div class="slot-detail">
+  <a href="{{ url_for('teacher.dashboard') }}" class="back-link">← Dashboard</a>
+
+  <div class="slot-detail__header">
+    <h1>{{ slot.title }}</h1>
+    <span class="slot-status slot-status--{{ slot.status }}">{{ slot.status|capitalize }}</span>
+    {% if slot.status != "closed" %}
+      <a href="{{ url_for('teacher.edit_slot', slot_id=slot.id) }}" class="btn btn--secondary">Edit</a>
+    {% endif %}
+  </div>
+
+  <div class="slot-detail__meta">
+    <p><strong>Date & time:</strong> {{ slot.scheduled_at.strftime('%A, %B %-d, %Y at %-I:%M %p') }}</p>
+    <p><strong>Duration:</strong> {{ slot.duration_minutes }} minutes</p>
+    <p><strong>Location:</strong> {{ slot.location }}</p>
+    <p><strong>Sign-up deadline:</strong> {{ slot.deadline(settings).strftime('%A, %B %-d, %Y') }}</p>
+    <p><strong>Signups:</strong> {{ slot.active_booking_count() }} / {{ slot.max_capacity }}
+       (min {{ slot.min_threshold }} to confirm)</p>
+  </div>
+
+  {% if slot.description %}
+    <div class="slot-detail__description">
+      <h2>Description</h2>
+      <p>{{ slot.description }}</p>
+    </div>
+  {% endif %}
+
+  <div class="roster">
+    <h2>Signups ({{ slot.active_booking_count() }})</h2>
+    {% set active = slot.active_bookings() %}
+    {% if active %}
+      <table class="roster-table">
+        <thead>
+          <tr>
+            <th>Client</th>
+            <th>Student</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Status</th>
+            <th>Signed up</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for booking in active %}
+            <tr>
+              <td>{{ booking.client_name }}</td>
+              <td>{{ booking.student_name }}</td>
+              <td><a href="mailto:{{ booking.email }}">{{ booking.email }}</a></td>
+              <td>{{ booking.phone or '—' }}</td>
+              <td><span class="booking-status booking-status--{{ booking.status }}">{{ booking.status|capitalize }}</span></td>
+              <td>{{ booking.booked_at.strftime('%b %-d at %-I:%M %p') }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="empty-state">No signups yet.</p>
+    {% endif %}
+
+    {% set withdrawn = slot.bookings | selectattr('status', 'equalto', 'withdrawn') | list %}
+    {% if withdrawn %}
+      <details class="withdrawn-list">
+        <summary>Withdrawn ({{ withdrawn|length }})</summary>
+        <table class="roster-table roster-table--muted">
+          <thead>
+            <tr><th>Client</th><th>Student</th><th>Email</th></tr>
+          </thead>
+          <tbody>
+            {% for booking in withdrawn %}
+              <tr>
+                <td>{{ booking.client_name }}</td>
+                <td>{{ booking.student_name }}</td>
+                <td>{{ booking.email }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </details>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

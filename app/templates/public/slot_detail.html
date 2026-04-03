@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}{{ slot.title }} — Music Lessons{% endblock %}
+
+{% block content %}
+<div class="slot-detail">
+  <a href="{{ url_for('public.index') }}" class="back-link">← All lessons</a>
+  {% if current_user.is_authenticated and current_user.is_teacher() %}
+    <a href="{{ url_for('teacher.slot_detail', slot_id=slot.id) }}" class="btn btn--secondary" style="float:right">View roster &amp; manage</a>
+  {% endif %}
+
+  <div class="slot-detail__status">
+    <span class="slot-status slot-status--{{ slot.status }}">
+      {% if slot.status == "confirmed" %}Confirmed{% else %}Forming{% endif %}
+    </span>
+  </div>
+
+  <h1>{{ slot.title }}</h1>
+
+  <div class="slot-detail__meta">
+    <p><strong>Date & time:</strong> {{ slot.scheduled_at.strftime('%A, %B %-d at %-I:%M %p') }}</p>
+    <p><strong>Duration:</strong> {{ slot.duration_minutes }} minutes</p>
+    <p><strong>Location:</strong> {{ slot.location }}</p>
+  </div>
+
+  {% if slot.description %}
+    <div class="slot-detail__description">
+      <h2>About this lesson</h2>
+      <p>{{ slot.description }}</p>
+    </div>
+  {% endif %}
+
+  <div class="slot-detail__availability">
+    {% if slot.status == "open" %}
+      <p class="countdown">
+        {% if slot.signups_needed() == 1 %}
+          <strong>1 more signup needed</strong> to confirm this lesson.
+        {% elif slot.signups_needed() > 1 %}
+          <strong>{{ slot.signups_needed() }} more signups needed</strong> to confirm this lesson.
+        {% endif %}
+      </p>
+    {% else %}
+      <p class="confirmed-note">This lesson is confirmed!</p>
+    {% endif %}
+
+    {% if slot.spots_remaining() > 0 %}
+      <p>{{ slot.spots_remaining() }} spot{% if slot.spots_remaining() != 1 %}s{% endif %} remaining.</p>
+    {% else %}
+      <p class="full-note">This lesson is full.</p>
+    {% endif %}
+
+    <p class="deadline-note">
+      Sign-ups close on {{ slot.deadline(settings).strftime('%A, %B %-d') }}.
+    </p>
+  </div>
+
+  {% if slot.spots_remaining() > 0 %}
+    <div class="booking-form">
+      <h2>Sign up</h2>
+      <form method="POST" action="{{ url_for('public.book_slot', slot_id=slot.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div class="field">
+          <label for="client_name">Your name <span class="required">*</span></label>
+          <input type="text" id="client_name" name="client_name" required />
+        </div>
+        <div class="field">
+          <label for="student_name">Student's name <span class="required">*</span></label>
+          <input type="text" id="student_name" name="student_name" required />
+        </div>
+        <div class="field">
+          <label for="email">Email address <span class="required">*</span></label>
+          <input type="email" id="email" name="email" required />
+          <small>We'll send your booking confirmation and a calendar invite here.</small>
+        </div>
+        <div class="field">
+          <label for="phone">Phone number <span class="optional">(optional)</span></label>
+          <input type="tel" id="phone" name="phone" />
+        </div>
+        <button type="submit" class="btn btn--primary btn--large">Sign up for this lesson</button>
+      </form>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
