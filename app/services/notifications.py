@@ -47,6 +47,14 @@ def notify_teacher_slot_confirmed_async(app, slot_id):
     _run_in_background(app, _do, slot_id)
 
 
+def send_reminder_emails_async(app, slot_id):
+    def _do(slot_id):
+        slot = LessonSlot.query.get(slot_id)
+        if slot:
+            send_reminder_emails(slot)
+    _run_in_background(app, _do, slot_id)
+
+
 def notify_teacher_new_booking_async(app, slot_id, booking_id):
     def _do(slot_id, booking_id):
         slot = LessonSlot.query.get(slot_id)
@@ -166,15 +174,18 @@ def send_slot_closed(slot):
 
 def send_reminder_emails(slot):
     """Reminder email sent N days before a confirmed lesson."""
+    settings = GlobalSettings.get()
+    days = settings.reminder_days_before
+    when = "tomorrow" if days == 1 else f"in {days} days"
     for booking in slot.active_bookings():
         body = f"""
         <p>Hi {booking.client_name},</p>
-        <p>This is a reminder that <strong>{slot.title}</strong> is tomorrow.</p>
+        <p>This is a reminder that <strong>{slot.title}</strong> is {when}.</p>
         <p><strong>{slot.scheduled_at.strftime('%A, %B %-d at %-I:%M %p')}</strong><br>
         {slot.location}</p>
         <p>See you there!</p>
         """
-        _send(booking.email, f"Reminder: {slot.title} tomorrow", body)
+        _send(booking.email, f"Reminder: {slot.title}", body)
 
 
 def notify_teacher_slot_confirmed(slot):

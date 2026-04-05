@@ -58,11 +58,3 @@ def process_reminders():
             reminded.append(slot)
 
     return reminded
-
-
-def notify_slot_changed(slot, changes):
-    """
-    Stub: called when a teacher edits a slot that already has signups.
-    Currently does nothing — email notification is a potential future feature.
-    """
-    pass

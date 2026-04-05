@@ -7,6 +7,11 @@
 - Decide: reminder email timing default (currently 1 day before)
 - Decide: should a parent be able to sign up two students in one form?
 - Decide: should clients be emailed when teacher edits a slot?
+- Decide: when teacher manually closes a lesson, should clients with pending signups receive an automated cancellation email, or should the teacher contact them directly?
+
+## Meta
+
+- Migrate this TODO file to GitHub Issues for better tracking
 
 ## Must-haves before beta
 

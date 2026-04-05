@@ -5,13 +5,11 @@ Patches _send to avoid real SMTP and _run_in_background to run synchronously
 so background-threaded notifications complete before assertions.
 """
 from datetime import datetime, timedelta
-from unittest.mock import patch, MagicMock, call
-import pytest
+from unittest.mock import patch
 
 from app import db
 from app.models import LessonSlot, Booking
-from app.services.scheduling import process_auto_closes
-from app.services.notifications import send_slot_closed, notify_teacher_slot_closed
+from app.services.notifications import notify_teacher_slot_closed
 
 from tests.conftest import SUPERUSER_EMAIL
 

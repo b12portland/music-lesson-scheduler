@@ -1,4 +1,3 @@
-import threading
 from functools import wraps
 from datetime import datetime, timedelta
 from app.utils import eastern_now
@@ -6,11 +5,10 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from app import db
 from app.models import LessonSlot, GlobalSettings
-from app.services.scheduling import notify_slot_changed
 from app.services.notifications import (
     send_lesson_confirmed_async,
     notify_teacher_slot_confirmed_async,
-    send_reminder_emails,
+    send_reminder_emails_async,
 )
 
 teacher_bp = Blueprint("teacher", __name__)
@@ -164,19 +162,13 @@ def edit_slot(slot_id):
             max_capacity = int(max_capacity)
         except ValueError:
             flash("Invalid date, time, or numeric value.", "error")
-            return render_template("teacher/slot_form.html", slot=slot, settings=settings)
+            return render_template("teacher/slot_form.html", slot=slot, settings=settings,
+                                   warning=warning, existing_signups=existing_signups)
 
         if min_threshold > max_capacity:
             flash("Minimum signups cannot exceed maximum capacity.", "error")
-            return render_template("teacher/slot_form.html", slot=slot, settings=settings)
-
-        changes = {}
-        if slot.title != title:
-            changes["title"] = (slot.title, title)
-        if slot.scheduled_at != scheduled_at:
-            changes["scheduled_at"] = (slot.scheduled_at, scheduled_at)
-        if slot.location != location:
-            changes["location"] = (slot.location, location)
+            return render_template("teacher/slot_form.html", slot=slot, settings=settings,
+                                   warning=warning, existing_signups=existing_signups)
 
         slot.title = title
         slot.description = description
@@ -186,9 +178,6 @@ def edit_slot(slot_id):
         slot.min_threshold = min_threshold
         slot.max_capacity = max_capacity
         db.session.commit()
-
-        if changes and existing_signups:
-            notify_slot_changed(slot, changes)
 
         flash("Lesson updated.", "success")
         return redirect(url_for("teacher.slot_detail", slot_id=slot.id))
@@ -254,15 +243,7 @@ def manual_send_reminders(slot_id):
     db.session.commit()
 
     app = current_app._get_current_object()
-    slot_id_val = slot.id
-
-    def _send():
-        with app.app_context():
-            s = LessonSlot.query.get(slot_id_val)
-            if s:
-                send_reminder_emails(s)
-
-    threading.Thread(target=_send, daemon=True).start()
+    send_reminder_emails_async(app, slot.id)
 
     flash(f'Reminder emails are being sent for "{slot.title}".', "success")
     return redirect(url_for("teacher.slot_detail", slot_id=slot.id))
