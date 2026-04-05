@@ -1,15 +1,22 @@
+import threading
+from functools import wraps
 from datetime import datetime, timedelta
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
+from app.utils import eastern_now
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, current_app
 from flask_login import login_required, current_user
 from app import db
 from app.models import LessonSlot, GlobalSettings
 from app.services.scheduling import notify_slot_changed
+from app.services.notifications import (
+    send_lesson_confirmed_async,
+    notify_teacher_slot_confirmed_async,
+    send_reminder_emails,
+)
 
 teacher_bp = Blueprint("teacher", __name__)
 
 
 def teacher_required(f):
-    from functools import wraps
     @wraps(f)
     def decorated(*args, **kwargs):
         if not current_user.is_authenticated or not current_user.is_teacher():
@@ -205,13 +212,12 @@ def close_slot(slot_id):
 @login_required
 @teacher_required
 def manual_confirm(slot_id):
-    from flask import current_app
-    from app.services.notifications import send_lesson_confirmed_async, notify_teacher_slot_confirmed_async
-    from flask import url_for as _url_for
-
     slot = LessonSlot.query.get_or_404(slot_id)
     if slot.status != "open":
         flash("Only open lessons can be manually confirmed.", "error")
+        return redirect(url_for("teacher.slot_detail", slot_id=slot.id))
+    if slot.active_booking_count() == 0:
+        flash("Cannot confirm a lesson with no signups.", "error")
         return redirect(url_for("teacher.slot_detail", slot_id=slot.id))
 
     for b in slot.bookings:
@@ -222,7 +228,7 @@ def manual_confirm(slot_id):
 
     app = current_app._get_current_object()
     cancel_urls = {
-        b.id: _url_for("public.cancel_booking", token=b.cancel_token, _external=True)
+        b.id: url_for("public.cancel_booking", token=b.cancel_token, _external=True)
         for b in slot.bookings if b.status == "confirmed"
     }
     send_lesson_confirmed_async(app, slot.id, cancel_urls)
@@ -236,9 +242,6 @@ def manual_confirm(slot_id):
 @login_required
 @teacher_required
 def manual_send_reminders(slot_id):
-    from flask import current_app
-    import threading
-
     slot = LessonSlot.query.get_or_404(slot_id)
     if slot.status != "confirmed":
         flash("Reminders can only be sent for confirmed lessons.", "error")
@@ -255,9 +258,7 @@ def manual_send_reminders(slot_id):
 
     def _send():
         with app.app_context():
-            from app.models import LessonSlot as LS
-            from app.services.notifications import send_reminder_emails
-            s = LS.query.get(slot_id_val)
+            s = LessonSlot.query.get(slot_id_val)
             if s:
                 send_reminder_emails(s)
 

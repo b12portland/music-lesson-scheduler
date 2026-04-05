@@ -2,6 +2,7 @@ from datetime import datetime
 from app.utils import eastern_now
 from app import db
 from app.models import LessonSlot, Booking, GlobalSettings
+from app.services.notifications import send_reminder_emails
 
 
 def check_and_update_slot_status(slot):
@@ -51,7 +52,6 @@ def process_reminders():
     confirmed_slots = LessonSlot.query.filter_by(status="confirmed", reminder_sent=False).all()
     for slot in confirmed_slots:
         if slot.reminder_at(settings) <= now < slot.scheduled_at:
-            from app.services.notifications import send_reminder_emails
             send_reminder_emails(slot)
             slot.reminder_sent = True
             db.session.commit()

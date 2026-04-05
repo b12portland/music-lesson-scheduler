@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import timedelta
 from app.utils import eastern_now
 from flask_login import UserMixin
 from app import db
@@ -55,11 +55,9 @@ class LessonSlot(db.Model):
 
     def deadline(self, settings):
         """Signup/cancellation deadline derived from global settings."""
-        from datetime import timedelta
         return self.scheduled_at - timedelta(days=settings.confirmation_required_before_days)
 
     def reminder_at(self, settings):
-        from datetime import timedelta
         return self.scheduled_at - timedelta(days=settings.reminder_days_before)
 
 
@@ -82,7 +80,6 @@ class Booking(db.Model):
         - The confirmation deadline hasn't passed yet, OR
         - It's been fewer than 24 hours since booking (24hr grace)
         """
-        from datetime import timedelta
         now = eastern_now()
         within_grace = now < self.booked_at + timedelta(hours=24)
         before_deadline = now < self.slot.deadline(settings)

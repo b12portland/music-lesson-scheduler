@@ -17,7 +17,16 @@
 - Test the .ics invite in a real calendar app (Google Calendar, Apple Calendar)
 - Clear seed/test data before go-live
 
+## Sibling local setup (non-programmer QOL)
+
+- Make it easy for sibling to run the app locally and make simple tweaks (e.g. email copy)
+- Review README for clarity — assume no programming background
+- Consider project structure changes that make customizable content (email copy, settings) easy to find and edit without touching app logic
+
 ## Nice to have before beta
+
+- Expand test coverage — unit tests for scheduling logic, integration tests for the full booking flow
+- Migrate from legacy `Query.get()` to `Session.get()` for SQLAlchemy 2.0 compatibility
 
 - Security headers (X-Frame-Options, Content-Security-Policy etc.)
 - Replace PAT embedded in .git/config remote URL with SSH auth

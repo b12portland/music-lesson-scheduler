@@ -22,15 +22,6 @@
     </p>
   {% endif %}
 
-  <p>A confirmation email with a calendar invite has been sent to <strong>{{ booking.email }}</strong>.</p>
-
-  <div class="cancel-section">
-    <h2>Need to cancel?</h2>
-    <p>Use this link to withdraw your signup. It will remain valid until the cancellation deadline
-    ({{ slot.deadline(settings).strftime('%A, %B %-d') }}) or 24 hours after you signed up,
-    whichever is later.</p>
-    <a href="{{ cancel_url }}" class="btn btn--secondary">Cancel my signup</a>
-    <p class="cancel-link-note">Save this page or your confirmation email — this is the only way to cancel.</p>
-  </div>
+  <p>A confirmation email with your calendar invite and cancellation link has been sent to <strong>{{ booking.email }}</strong>.</p>
 </div>
 {% endblock %}

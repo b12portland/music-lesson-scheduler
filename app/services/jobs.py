@@ -2,6 +2,8 @@ import logging
 from datetime import timedelta
 from app.utils import eastern_now
 from apscheduler.schedulers.background import BackgroundScheduler
+from app.services.scheduling import process_auto_closes, process_reminders
+from app.services.notifications import send_slot_closed, notify_teacher_slot_closed
 
 logger = logging.getLogger(__name__)
 _scheduler = None
@@ -29,13 +31,11 @@ def start_scheduler(app):
 
 def _run_hourly(app):
     with app.app_context():
-        from app.services.scheduling import process_auto_closes, process_reminders
-        from app.services.notifications import send_slot_closed, send_reminder_emails
-
         closed = process_auto_closes()
         for slot in closed:
             logger.info("Auto-closed slot: %s (id=%s)", slot.title, slot.id)
             send_slot_closed(slot)
+            notify_teacher_slot_closed(slot)
 
         reminded = process_reminders()
         for slot in reminded:

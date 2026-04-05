@@ -49,10 +49,12 @@ def _seed_superuser():
 
     superuser = User.query.filter_by(role="superuser").first()
     if not superuser:
-        hashed = bcrypt.hashpw(b"k&4QIgF7bIgiAE4o", bcrypt.gensalt()).decode()
+        email = os.environ.get("SUPERUSER_EMAIL", "admin@example.com")
+        password = os.environ.get("SUPERUSER_PASSWORD", "changeme123").encode()
+        hashed = bcrypt.hashpw(password, bcrypt.gensalt()).decode()
         superuser = User(
             name="Admin",
-            email="b12.vn.pb@gmail.com",
+            email=email,
             password_hash=hashed,
             role="superuser",
         )

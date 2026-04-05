@@ -8,6 +8,7 @@ from email.mime.base import MIMEBase
 from email import encoders
 from flask import current_app
 from app.services.calendar import generate_ics
+from app.models import Booking, LessonSlot, GlobalSettings
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,6 @@ def _run_in_background(app, fn, *args, **kwargs):
 
 def send_booking_confirmation_async(app, booking_id, slot_id, cancel_url):
     def _do(booking_id, slot_id, cancel_url):
-        from app.models import Booking, LessonSlot
         booking = Booking.query.get(booking_id)
         slot = LessonSlot.query.get(slot_id)
         if booking and slot:
@@ -33,7 +33,6 @@ def send_booking_confirmation_async(app, booking_id, slot_id, cancel_url):
 def send_lesson_confirmed_async(app, slot_id, cancel_urls):
     """cancel_urls: dict of {booking_id: cancel_url} built in request context."""
     def _do(slot_id, cancel_urls):
-        from app.models import LessonSlot
         slot = LessonSlot.query.get(slot_id)
         if slot:
             send_lesson_confirmed(slot, cancel_urls)
@@ -42,11 +41,28 @@ def send_lesson_confirmed_async(app, slot_id, cancel_urls):
 
 def notify_teacher_slot_confirmed_async(app, slot_id):
     def _do(slot_id):
-        from app.models import LessonSlot
         slot = LessonSlot.query.get(slot_id)
         if slot:
             notify_teacher_slot_confirmed(slot)
     _run_in_background(app, _do, slot_id)
+
+
+def notify_teacher_new_booking_async(app, slot_id, booking_id):
+    def _do(slot_id, booking_id):
+        slot = LessonSlot.query.get(slot_id)
+        booking = Booking.query.get(booking_id)
+        if slot and booking:
+            notify_teacher_new_booking(slot, booking)
+    _run_in_background(app, _do, slot_id, booking_id)
+
+
+def notify_teacher_booking_cancelled_async(app, slot_id, booking_id):
+    def _do(slot_id, booking_id):
+        slot = LessonSlot.query.get(slot_id)
+        booking = Booking.query.get(booking_id)
+        if slot and booking:
+            notify_teacher_booking_cancelled(slot, booking)
+    _run_in_background(app, _do, slot_id, booking_id)
 
 
 def _send(to, subject, body_html, attachment_name=None, attachment_data=None):
@@ -82,7 +98,6 @@ def _send(to, subject, body_html, attachment_name=None, attachment_data=None):
 
 def send_booking_confirmation(booking, slot, cancel_url):
     """Email sent immediately after a client signs up."""
-    from app.models import GlobalSettings
     settings = GlobalSettings.get()
     deadline = slot.deadline(settings)
     grace_deadline = booking.booked_at + timedelta(hours=24)
@@ -114,7 +129,6 @@ def send_lesson_confirmed(slot, cancel_urls):
     """Email all confirmed bookings when a slot reaches its threshold.
     cancel_urls: dict of {booking_id: cancel_url}
     """
-    from app.models import GlobalSettings
     settings = GlobalSettings.get()
     deadline = slot.deadline(settings)
     for booking in slot.active_bookings():
@@ -175,9 +189,45 @@ def notify_teacher_slot_confirmed(slot):
     _send(teacher.email, f"Lesson confirmed: {slot.title}", body)
 
 
-def notify_slot_changed(slot, changes):
+def notify_teacher_new_booking(slot, booking):
+    """Notify the teacher when a new client signs up."""
+    teacher = slot.teacher
+    count = slot.active_booking_count()
+    body = f"""
+    <p>Hi {teacher.name},</p>
+    <p><strong>{booking.client_name}</strong> has signed up <strong>{booking.student_name}</strong>
+    for <strong>{slot.title}</strong> on {slot.scheduled_at.strftime('%A, %B %-d at %-I:%M %p')}.</p>
+    <p>Signups: {count} / {slot.max_capacity} (minimum {slot.min_threshold} to confirm)</p>
+    <p>Contact: {booking.email}{f" / {booking.phone}" if booking.phone else ""}</p>
     """
-    Stub: called when teacher edits a slot that has existing signups.
-    Email notification is a potential future feature.
+    _send(teacher.email, f"New signup: {slot.title}", body)
+
+
+def notify_teacher_booking_cancelled(slot, booking):
+    """Notify the teacher when a client cancels their booking."""
+    teacher = slot.teacher
+    count = slot.active_booking_count()
+    body = f"""
+    <p>Hi {teacher.name},</p>
+    <p><strong>{booking.client_name}</strong> has cancelled their signup for
+    <strong>{booking.student_name}</strong> in <strong>{slot.title}</strong>
+    on {slot.scheduled_at.strftime('%A, %B %-d at %-I:%M %p')}.</p>
+    <p>Signups remaining: {count} / {slot.max_capacity}</p>
     """
-    pass
+    _send(teacher.email, f"Signup cancelled: {slot.title}", body)
+
+
+def notify_teacher_slot_closed(slot):
+    """Notify the teacher when a lesson auto-closes without reaching the threshold."""
+    teacher = slot.teacher
+    body = f"""
+    <p>Hi {teacher.name},</p>
+    <p><strong>{slot.title}</strong> scheduled for
+    {slot.scheduled_at.strftime('%A, %B %-d at %-I:%M %p')} has been automatically closed
+    because it did not reach the minimum of {slot.min_threshold} sign-ups
+    ({slot.active_booking_count()} signed up).</p>
+    <p>Clients who signed up have been notified.</p>
+    """
+    _send(teacher.email, f"Lesson auto-closed: {slot.title}", body)
+
+

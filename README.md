@@ -58,9 +58,18 @@ The app runs at [http://127.0.0.1:5001](http://127.0.0.1:5001).
 
 ### First login
 
-A superuser account is created automatically on first run. Log in at `/login` with the credentials set in `app/__init__.py` in the `_seed_superuser` function. **Change the password after first login** via the admin dashboard.
+A superuser account is created automatically on first run using the `SUPERUSER_EMAIL` and `SUPERUSER_PASSWORD` values from your `.env` file.
 
-From the admin dashboard you can create teacher accounts and configure global settings.
+**Before starting the app for the first time**, set these to real values in `.env`:
+
+```
+SUPERUSER_EMAIL=your-real-email@example.com
+SUPERUSER_PASSWORD=a-strong-password
+```
+
+The default email (`admin@example.com`) is intentionally fake — the app will not work for login until you replace it. The default password (`changeme123`) is intentionally weak — do not use it in production.
+
+Once logged in, you can create teacher accounts and configure global settings from the admin dashboard.
 
 ### All-in-one timezone
 

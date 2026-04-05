@@ -1,15 +1,16 @@
 import uuid
-from datetime import datetime
 from app.utils import eastern_now
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
+from sqlalchemy import func
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, current_app
 from app import db
 from app.models import LessonSlot, Booking, GlobalSettings
 from app.services.scheduling import check_and_update_slot_status
-from flask import current_app
 from app.services.notifications import (
     send_booking_confirmation_async,
     send_lesson_confirmed_async,
     notify_teacher_slot_confirmed_async,
+    notify_teacher_new_booking_async,
+    notify_teacher_booking_cancelled_async,
 )
 
 public_bp = Blueprint("public", __name__)
@@ -64,7 +65,6 @@ def book_slot(slot_id):
         return redirect(url_for("public.slot_detail", slot_id=slot_id))
 
     # Block duplicate: same email + same student name on the same slot
-    from sqlalchemy import func
     duplicate = Booking.query.filter(
         Booking.slot_id == slot.id,
         Booking.status != "withdrawn",
@@ -114,21 +114,18 @@ def book_slot(slot_id):
         notify_teacher_slot_confirmed_async(app, slot.id)
 
     send_booking_confirmation_async(app, booking.id, slot.id, booking_cancel_url)
+    notify_teacher_new_booking_async(app, slot.id, booking.id)
 
-    return redirect(url_for("public.booking_confirmed", booking_id=booking.id))
+    return redirect(url_for("public.booking_confirmed", token=booking.cancel_token))
 
 
-@public_bp.route("/booking/<int:booking_id>/confirmed")
-def booking_confirmed(booking_id):
-    booking = Booking.query.get_or_404(booking_id)
-    settings = GlobalSettings.get()
-    cancel_url = url_for("public.cancel_booking", token=booking.cancel_token, _external=True)
+@public_bp.route("/booking/<token>/confirmed")
+def booking_confirmed(token):
+    booking = Booking.query.filter_by(cancel_token=token).first_or_404()
     return render_template(
         "public/booking_confirmed.html",
         booking=booking,
         slot=booking.slot,
-        cancel_url=cancel_url,
-        settings=settings,
     )
 
 
@@ -162,5 +159,8 @@ def confirm_cancellation(token):
 
     # If slot was confirmed and full, cancellation may reopen a spot — no status change needed,
     # the slot stays confirmed and spots_remaining() will reflect the new count automatically.
+
+    app = current_app._get_current_object()
+    notify_teacher_booking_cancelled_async(app, booking.slot_id, booking.id)
 
     return render_template("public/cancel_result.html", result="success", booking=booking)

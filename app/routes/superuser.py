@@ -1,4 +1,5 @@
 import bcrypt
+from functools import wraps
 from datetime import timedelta
 from app.utils import eastern_now
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
@@ -10,7 +11,6 @@ superuser_bp = Blueprint("superuser", __name__)
 
 
 def superuser_required(f):
-    from functools import wraps
     @wraps(f)
     def decorated(*args, **kwargs):
         if not current_user.is_authenticated or not current_user.is_superuser():
@@ -92,8 +92,7 @@ def update_settings():
         conflicts = []
         for slot in open_slots:
             new_deadline = slot.scheduled_at - timedelta(days=new_days)
-            new_deadline_aware = new_deadline.replace(tzinfo=timezone.utc) if new_deadline.tzinfo is None else new_deadline
-            if new_deadline_aware <= now:
+            if new_deadline <= now:
                 conflicts.append(slot)
 
         if conflicts:
