@@ -1,13 +1,13 @@
 # Claude Code Instructions
 
 ## Git
-- Never push to the remote repository unless the user explicitly says to push.
-- Before pushing, print the diff summary (`git diff --stat HEAD~N HEAD` covering all commits being pushed) and confirm the file list looks right before proceeding.
+- Committing locally is fine and encouraged — do it proactively at logical checkpoints without asking.
 - Before committing, run `git status` and verify no IDE/editor files or other unintended files are being staged.
+- Never push without explicit user approval. When the user approves a push, first print the diff summary (`git diff --stat origin/main..HEAD`) so both parties can confirm the file list before proceeding.
 
 ## Actions requiring explicit human approval
-- Pushing code to the remote repository.
-- Modifying design documents (currently TODO.md). Describe the proposed change and ask first.
+- Pushing to the remote repository — always ask, always show the diff summary first.
+- Modifying design documents (currently TODO.md) — describe the proposed change and ask first.
 
 ## Imports
 - No function-level imports anywhere in the codebase except inside `create_app()` in `app/__init__.py`, where they are required to break circular imports.
@@ -47,3 +47,7 @@ Flag only genuine issues. Skip style, formatting, and nitpicks unless they indic
 
 ## Search and tooling
 - Use Grep/Glob directly for targeted searches. Only spawn Explore agents for open-ended, multi-location exploration where the answer isn't a known pattern.
+- Don't spawn an agent to answer a question that a single Read, Grep, or Glob would resolve.
+
+## Editing files
+- Always copy old_string in Edit tool calls directly from a Read result. Never reconstruct from memory.
