@@ -45,7 +45,6 @@ def slot_detail(slot_id):
 def book_slot(slot_id):
     now = eastern_now()
     slot = db.session.get(LessonSlot, slot_id) or abort(404)
-    settings = GlobalSettings.get()
 
     if slot.status not in ("open", "confirmed") or slot.scheduled_at <= now:
         flash("This lesson is no longer available.", "error")

@@ -1,7 +1,6 @@
-from datetime import datetime
 from app.utils import eastern_now
 from app import db
-from app.models import LessonSlot, Booking, GlobalSettings
+from app.models import LessonSlot, GlobalSettings
 from app.services.notifications import send_reminder_emails
 
 
