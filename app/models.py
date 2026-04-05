@@ -36,6 +36,7 @@ class LessonSlot(db.Model):
     max_capacity = db.Column(db.Integer, nullable=False)
     min_threshold = db.Column(db.Integer, nullable=False)
     status = db.Column(db.String(20), nullable=False, default="open")  # open | confirmed | closed
+    reminder_sent = db.Column(db.Boolean, nullable=False, default=False)
     created_at = db.Column(db.DateTime, default=eastern_now)
 
     bookings = db.relationship("Booking", backref="slot", lazy=True)

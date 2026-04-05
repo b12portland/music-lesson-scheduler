@@ -48,11 +48,13 @@ def process_reminders():
     now = eastern_now()
     reminded = []
 
-    confirmed_slots = LessonSlot.query.filter_by(status="confirmed").all()
+    confirmed_slots = LessonSlot.query.filter_by(status="confirmed", reminder_sent=False).all()
     for slot in confirmed_slots:
         if slot.reminder_at(settings) <= now < slot.scheduled_at:
             from app.services.notifications import send_reminder_emails
             send_reminder_emails(slot)
+            slot.reminder_sent = True
+            db.session.commit()
             reminded.append(slot)
 
     return reminded

@@ -209,6 +209,7 @@ section h2 { font-size: 1.2rem; margin-bottom: 1rem; }
 .empty-state { color: var(--color-text-muted); font-style: italic; }
 .danger-zone { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--color-danger); }
 .danger-zone h3 { color: var(--color-danger); margin-bottom: 0.5rem; }
+.manual-actions { margin: 1.25rem 0; }
 
 /* ── Mobile ── */
 @media (max-width: 600px) {

@@ -20,7 +20,28 @@
     <p><strong>Sign-up deadline:</strong> {{ slot.deadline(settings).strftime('%A, %B %-d, %Y') }}</p>
     <p><strong>Signups:</strong> {{ slot.active_booking_count() }} / {{ slot.max_capacity }}
        (min {{ slot.min_threshold }} to confirm)</p>
+    <p><strong>Reminders:</strong> {{ "Sent" if slot.reminder_sent else "Not yet sent" }}</p>
   </div>
+
+  {% if slot.status == "open" and slot.active_booking_count() > 0 %}
+    <div class="manual-actions">
+      <form method="POST" action="{{ url_for('teacher.manual_confirm', slot_id=slot.id) }}"
+            onsubmit="return confirm('Confirm this lesson and notify all signed-up clients?')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <button type="submit" class="btn btn--primary">Confirm lesson manually</button>
+      </form>
+    </div>
+  {% endif %}
+
+  {% if slot.status == "confirmed" and not slot.reminder_sent %}
+    <div class="manual-actions">
+      <form method="POST" action="{{ url_for('teacher.manual_send_reminders', slot_id=slot.id) }}"
+            onsubmit="return confirm('Send reminder emails to all confirmed clients now?')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <button type="submit" class="btn btn--secondary">Send reminders now</button>
+      </form>
+    </div>
+  {% endif %}
 
   {% if slot.description %}
     <div class="slot-detail__description">
