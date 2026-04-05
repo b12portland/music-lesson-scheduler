@@ -59,7 +59,7 @@ def new_teacher():
 @login_required
 @superuser_required
 def reset_password(user_id):
-    user = User.query.get_or_404(user_id)
+    user = db.session.get(User, user_id) or abort(404)
     new_password = request.form.get("new_password", "")
     if not new_password:
         flash("Password cannot be empty.", "error")

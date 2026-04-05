@@ -9,5 +9,5 @@ def test_manual_confirm_rejected_with_no_signups(superuser_client, open_slot):
         follow_redirects=True,
     )
     assert response.status_code == 200
-    slot = LessonSlot.query.get(open_slot.id)
+    slot = db.session.get(LessonSlot, open_slot.id)
     assert slot.status == "open", "Slot should remain open when confirmed with no signups"

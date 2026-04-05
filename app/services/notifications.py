@@ -7,6 +7,7 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 from flask import current_app
+from app import db
 from app.services.calendar import generate_ics
 from app.models import Booking, LessonSlot, GlobalSettings
 
@@ -23,8 +24,8 @@ def _run_in_background(app, fn, *args, **kwargs):
 
 def send_booking_confirmation_async(app, booking_id, slot_id, cancel_url):
     def _do(booking_id, slot_id, cancel_url):
-        booking = Booking.query.get(booking_id)
-        slot = LessonSlot.query.get(slot_id)
+        booking = db.session.get(Booking, booking_id)
+        slot = db.session.get(LessonSlot, slot_id)
         if booking and slot:
             send_booking_confirmation(booking, slot, cancel_url)
     _run_in_background(app, _do, booking_id, slot_id, cancel_url)
@@ -33,7 +34,7 @@ def send_booking_confirmation_async(app, booking_id, slot_id, cancel_url):
 def send_lesson_confirmed_async(app, slot_id, cancel_urls):
     """cancel_urls: dict of {booking_id: cancel_url} built in request context."""
     def _do(slot_id, cancel_urls):
-        slot = LessonSlot.query.get(slot_id)
+        slot = db.session.get(LessonSlot, slot_id)
         if slot:
             send_lesson_confirmed(slot, cancel_urls)
     _run_in_background(app, _do, slot_id, cancel_urls)
@@ -41,7 +42,7 @@ def send_lesson_confirmed_async(app, slot_id, cancel_urls):
 
 def notify_teacher_slot_confirmed_async(app, slot_id):
     def _do(slot_id):
-        slot = LessonSlot.query.get(slot_id)
+        slot = db.session.get(LessonSlot, slot_id)
         if slot:
             notify_teacher_slot_confirmed(slot)
     _run_in_background(app, _do, slot_id)
@@ -49,7 +50,7 @@ def notify_teacher_slot_confirmed_async(app, slot_id):
 
 def send_reminder_emails_async(app, slot_id):
     def _do(slot_id):
-        slot = LessonSlot.query.get(slot_id)
+        slot = db.session.get(LessonSlot, slot_id)
         if slot:
             send_reminder_emails(slot)
     _run_in_background(app, _do, slot_id)
@@ -57,8 +58,8 @@ def send_reminder_emails_async(app, slot_id):
 
 def notify_teacher_new_booking_async(app, slot_id, booking_id):
     def _do(slot_id, booking_id):
-        slot = LessonSlot.query.get(slot_id)
-        booking = Booking.query.get(booking_id)
+        slot = db.session.get(LessonSlot, slot_id)
+        booking = db.session.get(Booking, booking_id)
         if slot and booking:
             notify_teacher_new_booking(slot, booking)
     _run_in_background(app, _do, slot_id, booking_id)
@@ -66,8 +67,8 @@ def notify_teacher_new_booking_async(app, slot_id, booking_id):
 
 def notify_teacher_booking_cancelled_async(app, slot_id, booking_id):
     def _do(slot_id, booking_id):
-        slot = LessonSlot.query.get(slot_id)
-        booking = Booking.query.get(booking_id)
+        slot = db.session.get(LessonSlot, slot_id)
+        booking = db.session.get(Booking, booking_id)
         if slot and booking:
             notify_teacher_booking_cancelled(slot, booking)
     _run_in_background(app, _do, slot_id, booking_id)

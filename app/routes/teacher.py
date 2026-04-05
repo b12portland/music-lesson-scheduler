@@ -123,7 +123,7 @@ def new_slot():
 @login_required
 @teacher_required
 def slot_detail(slot_id):
-    slot = LessonSlot.query.get_or_404(slot_id)
+    slot = db.session.get(LessonSlot, slot_id) or abort(404)
     settings = GlobalSettings.get()
     return render_template("teacher/slot_detail.html", slot=slot, settings=settings)
 
@@ -132,7 +132,7 @@ def slot_detail(slot_id):
 @login_required
 @teacher_required
 def edit_slot(slot_id):
-    slot = LessonSlot.query.get_or_404(slot_id)
+    slot = db.session.get(LessonSlot, slot_id) or abort(404)
     settings = GlobalSettings.get()
     existing_signups = slot.active_bookings()
     warning = None
@@ -190,7 +190,7 @@ def edit_slot(slot_id):
 @login_required
 @teacher_required
 def close_slot(slot_id):
-    slot = LessonSlot.query.get_or_404(slot_id)
+    slot = db.session.get(LessonSlot, slot_id) or abort(404)
     slot.status = "closed"
     db.session.commit()
     flash(f'Lesson "{slot.title}" has been closed.', "success")
@@ -201,7 +201,7 @@ def close_slot(slot_id):
 @login_required
 @teacher_required
 def manual_confirm(slot_id):
-    slot = LessonSlot.query.get_or_404(slot_id)
+    slot = db.session.get(LessonSlot, slot_id) or abort(404)
     if slot.status != "open":
         flash("Only open lessons can be manually confirmed.", "error")
         return redirect(url_for("teacher.slot_detail", slot_id=slot.id))
@@ -231,7 +231,7 @@ def manual_confirm(slot_id):
 @login_required
 @teacher_required
 def manual_send_reminders(slot_id):
-    slot = LessonSlot.query.get_or_404(slot_id)
+    slot = db.session.get(LessonSlot, slot_id) or abort(404)
     if slot.status != "confirmed":
         flash("Reminders can only be sent for confirmed lessons.", "error")
         return redirect(url_for("teacher.slot_detail", slot_id=slot.id))

@@ -33,7 +33,7 @@ def index():
 @public_bp.route("/lessons/<int:slot_id>")
 def slot_detail(slot_id):
     now = eastern_now()
-    slot = LessonSlot.query.get_or_404(slot_id)
+    slot = db.session.get(LessonSlot, slot_id) or abort(404)
     # Only show upcoming open/confirmed slots to the public
     if slot.status not in ("open", "confirmed") or slot.scheduled_at <= now:
         abort(404)
@@ -44,7 +44,7 @@ def slot_detail(slot_id):
 @public_bp.route("/lessons/<int:slot_id>/book", methods=["POST"])
 def book_slot(slot_id):
     now = eastern_now()
-    slot = LessonSlot.query.get_or_404(slot_id)
+    slot = db.session.get(LessonSlot, slot_id) or abort(404)
     settings = GlobalSettings.get()
 
     if slot.status not in ("open", "confirmed") or slot.scheduled_at <= now:
